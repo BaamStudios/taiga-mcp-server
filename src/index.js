@@ -120,7 +120,7 @@ registerTaskTools(server);
 registerEpicTools(server);
 registerIssueTools(server);
 registerMilestoneTools(server);
-registerWikiTools(server);
+//registerWikiTools(server);
 
 // Start the server
 const transport = new StdioServerTransport();
