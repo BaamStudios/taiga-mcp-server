@@ -215,4 +215,62 @@ Timezone: ${user.timezone || "Not set"}`,
       }
     }
   );
+
+  // Register new user
+  server.tool(
+    "taiga_register",
+    "Register a new user in Taiga with username, email, password, and full name",
+    {
+      username: z.string().describe("Username for the new user"),
+      email: z.string().email().describe("Email address for the new user"),
+      password: z.string().describe("Password for the new user"),
+      full_name: z.string().describe("Full name of the user"),
+    },
+    async ({ username, email, password, full_name }) => {
+      try {
+        const userData = {
+          username,
+          email,
+          password,
+          full_name,
+        };
+
+        const registrationResult = await authenticationService.registerUser(
+          userData
+        );
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Successfully registered user: ${
+                registrationResult.full_name_display
+              } (${registrationResult.username})
+
+Registration Details:
+- User ID: ${registrationResult.id}
+- Username: ${registrationResult.username}
+- Email: ${registrationResult.email}
+- Full Name: ${registrationResult.full_name_display}
+- Auth Token: ${registrationResult.auth_token ? "Generated" : "Not provided"}
+- Account Status: ${registrationResult.is_active ? "Active" : "Inactive"}
+- Date Joined: ${registrationResult.date_joined}
+- UUID: ${registrationResult.uuid}
+
+The user is now registered and can log in to Taiga.`,
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Failed to register user: ${error.message}`,
+            },
+          ],
+        };
+      }
+    }
+  );
 }
