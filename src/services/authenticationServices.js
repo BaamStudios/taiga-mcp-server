@@ -81,7 +81,7 @@ export class AuthenticationService {
    */
   async registerUser(userData) {
     try {
-      const client = createUnauthenticatedClient();
+      const client = await createAuthenticatedClient();
 
       const registrationData = {
         username: userData.username,

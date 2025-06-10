@@ -1,10 +1,11 @@
-import axios from 'axios';
-import dotenv from 'dotenv';
+import axios from "axios";
+import dotenv from "dotenv";
 
 dotenv.config();
 
 // Taiga API configuration
-const TAIGA_API_URL = process.env.TAIGA_API_URL || 'https://api.taiga.io/api/v1';
+const TAIGA_API_URL =
+  process.env.TAIGA_API_URL || "https://api.taiga.io/api/v1";
 
 // Store the auth token
 let authToken = null;
@@ -17,12 +18,14 @@ let tokenExpiration = null;
  * @returns {Promise<string>} - Auth token
  */
 export async function authenticate(username, password) {
+  const url = `${TAIGA_API_URL}/auth`;
+  const data = {
+    type: "normal",
+    username,
+    password,
+  };
   try {
-    const response = await axios.post(`${TAIGA_API_URL}/auth`, {
-      type: 'normal',
-      username,
-      password
-    });
+    const response = await axios.post(url, data);
 
     authToken = response.data.auth_token;
     // Set token expiration to 24 hours from now
@@ -30,8 +33,8 @@ export async function authenticate(username, password) {
 
     return authToken;
   } catch (error) {
-    console.error('Authentication failed:', error.message);
-    throw new Error('Failed to authenticate with Taiga');
+    console.error("Authentication failed:", error.message, url, data);
+    throw new Error("Failed to authenticate with Taiga");
   }
 }
 
@@ -46,7 +49,7 @@ export async function getAuthToken() {
     const password = process.env.TAIGA_PASSWORD;
 
     if (!username || !password) {
-      throw new Error('Taiga credentials not found in environment variables');
+      throw new Error("Taiga credentials not found in environment variables");
     }
 
     await authenticate(username, password);
@@ -65,8 +68,8 @@ export async function createAuthenticatedClient() {
   return axios.create({
     baseURL: TAIGA_API_URL,
     headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    }
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
   });
 }
