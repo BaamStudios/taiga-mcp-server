@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { authenticate } from "../taigaAuth.js";
+import { projectService } from "../services/projectServices.js";
 import { authenticationService } from "../services/authenticationServices.js";
 
 /**
@@ -8,38 +9,48 @@ import { authenticationService } from "../services/authenticationServices.js";
  * @param {TaigaService} taigaService - The Taiga service instance
  */
 export function registerAuthenticationTools(server) {
-  // Add tool for authenticating with Taiga
+  // Register new user
   server.tool(
-    "taiga_authenticate",
-    "Authenticate with Taiga API using username and password credentials",
+    "taiga_register",
+    "Register a new user in Taiga with username, email, password, and full name",
     {
-      username: z.string().optional(),
-      password: z.string().optional(),
+      username: z.string().describe("Username for the new user"),
+      email: z.string().email().describe("Email address for the new user"),
+      password: z.string().describe("Password for the new user"),
+      full_name: z.string().describe("Full name of the user"),
     },
-    async ({ username, password }) => {
+    async ({ username, email, password, full_name }) => {
       try {
-        // Use provided credentials or fall back to environment variables
-        const user = username || process.env.TAIGA_USERNAME;
-        const pass = password || process.env.TAIGA_PASSWORD;
+        const userData = {
+          username,
+          email,
+          password,
+          full_name,
+        };
 
-        if (!user || !pass) {
-          return {
-            content: [
-              {
-                type: "text",
-                text: "Error: Username and password are required. Please provide them or set them in the environment variables.",
-              },
-            ],
-          };
-        }
-        await authenticate(user, pass);
-        const currentUser = await authenticationService.getCurrentUser();
+        const registrationResult = await authenticationService.registerUser(
+          userData
+        );
 
         return {
           content: [
             {
               type: "text",
-              text: `Successfully authenticated as ${currentUser.full_name} (${currentUser.username}).`,
+              text: `Successfully registered user: ${
+                registrationResult.full_name_display
+              } (${registrationResult.username})
+
+Registration Details:
+- User ID: ${registrationResult.id}
+- Username: ${registrationResult.username}
+- Email: ${registrationResult.email}
+- Full Name: ${registrationResult.full_name_display}
+- Auth Token: ${registrationResult.auth_token ? "Generated" : "Not provided"}
+- Account Status: ${registrationResult.is_active ? "Active" : "Inactive"}
+- Date Joined: ${registrationResult.date_joined}
+- UUID: ${registrationResult.uuid}
+
+The user is now registered and can log in to Taiga.`,
             },
           ],
         };
@@ -48,13 +59,63 @@ export function registerAuthenticationTools(server) {
           content: [
             {
               type: "text",
-              text: `Authentication failed: ${error.message}`,
+              text: `Failed to register user: ${error.message}`,
             },
           ],
         };
       }
     }
   );
+
+  if (false) {
+    // Add tool for authenticating with Taiga
+    server.tool(
+      "taiga_authenticate",
+      "Authenticate with Taiga API using username and password credentials",
+      {
+        username: z.string().optional(),
+        password: z.string().optional(),
+      },
+      async ({ username, password }) => {
+        try {
+          // Use provided credentials or fall back to environment variables
+          const user = username || process.env.TAIGA_USERNAME;
+          const pass = password || process.env.TAIGA_PASSWORD;
+
+          if (!user || !pass) {
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: "Error: Username and password are required. Please provide them or set them in the environment variables.",
+                },
+              ],
+            };
+          }
+          await authenticate(user, pass);
+          const currentUser = await authenticationService.getCurrentUser();
+
+          return {
+            content: [
+              {
+                type: "text",
+                text: `Successfully authenticated as ${currentUser.full_name} (${currentUser.username}).`,
+              },
+            ],
+          };
+        } catch (error) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: `Authentication failed: ${error.message}`,
+              },
+            ],
+          };
+        }
+      }
+    );
+  }
 
   // Get current user
   server.tool(
@@ -212,64 +273,6 @@ Timezone: ${user.timezone || "Not set"}`,
         };
       } catch (error) {
         throw new Error(`Failed to get user: ${error.message}`);
-      }
-    }
-  );
-
-  // Register new user
-  server.tool(
-    "taiga_register",
-    "Register a new user in Taiga with username, email, password, and full name",
-    {
-      username: z.string().describe("Username for the new user"),
-      email: z.string().email().describe("Email address for the new user"),
-      password: z.string().describe("Password for the new user"),
-      full_name: z.string().describe("Full name of the user"),
-    },
-    async ({ username, email, password, full_name }) => {
-      try {
-        const userData = {
-          username,
-          email,
-          password,
-          full_name,
-        };
-
-        const registrationResult = await authenticationService.registerUser(
-          userData
-        );
-
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Successfully registered user: ${
-                registrationResult.full_name_display
-              } (${registrationResult.username})
-
-Registration Details:
-- User ID: ${registrationResult.id}
-- Username: ${registrationResult.username}
-- Email: ${registrationResult.email}
-- Full Name: ${registrationResult.full_name_display}
-- Auth Token: ${registrationResult.auth_token ? "Generated" : "Not provided"}
-- Account Status: ${registrationResult.is_active ? "Active" : "Inactive"}
-- Date Joined: ${registrationResult.date_joined}
-- UUID: ${registrationResult.uuid}
-
-The user is now registered and can log in to Taiga.`,
-            },
-          ],
-        };
-      } catch (error) {
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Failed to register user: ${error.message}`,
-            },
-          ],
-        };
       }
     }
   );

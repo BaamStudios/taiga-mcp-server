@@ -144,17 +144,17 @@ export class ProjectService {
    * @returns {Promise<Object>} - Invitation result
    */
   async inviteProjectUser(projectId, email, roleId) {
+    const data = {
+      project_id: projectId,
+      bulk_memberships: [{ role_id: roleId, username: email }],
+    };
     try {
       const client = await createAuthenticatedClient();
-      const response = await client.post("/memberships", {
-        project_id: projectId,
-        username: email,
-        role_id: roleId,
-      });
+      const response = await client.post("/memberships/bulk_create", data);
       return response.data;
     } catch (error) {
       console.error(
-        `Failed to invite user ${email} to project ${projectId}:`,
+        `Failed to invite user ${JSON.stringify(data)}:`,
         error.message
       );
       throw new Error("Failed to invite user to project in Taiga");

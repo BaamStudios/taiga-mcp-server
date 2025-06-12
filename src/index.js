@@ -7,6 +7,7 @@ import { registerEpicTools } from "./tools/epicTools.js";
 import { registerIssueTools } from "./tools/issueTools.js";
 import { registerMilestoneTools } from "./tools/milestoneTools.js";
 import { registerProjectTools } from "./tools/projectTools.js";
+import { registerRoleTools } from "./tools/roleTools.js";
 import { registerTaskTools } from "./tools/taskTools.js";
 import { registerUserStoryTools } from "./tools/userStoryTools.js";
 import { registerWikiTools } from "./tools/wikiTools.js";
@@ -35,6 +36,10 @@ PROJECT MANAGEMENT:
 - Get project statistics and search within projects
 - Export project data
 - Invite users to projects
+
+ROLE MANAGEMENT:
+- List roles (all or filtered by project)
+- Get role details and permissions
 
 USER STORY MANAGEMENT:
 - List, get, create, update, delete user stories
@@ -115,6 +120,7 @@ ${projects.map((p) => `- ${p.name} (ID: ${p.id}, Slug: ${p.slug})`).join("\n")}
 // Register all tools
 registerAuthenticationTools(server);
 registerProjectTools(server);
+registerRoleTools(server);
 registerUserStoryTools(server);
 registerTaskTools(server);
 registerEpicTools(server);
